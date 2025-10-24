@@ -137,7 +137,7 @@ def train_and_eval_model(
         # -------------- Training Data Per Epoch -----------
         train_data = train_loop(model=model,
                 loss_fn=loss_fn,
-                trainloader=train_dataloader,
+                train_dataloader=train_dataloader,
                 optimizer=optimizer,
                 device=device)
         
@@ -151,7 +151,7 @@ def train_and_eval_model(
          # -------------- Validating Data Per Epoch -----------        
         val_data = val_loop(model=model,
                             loss_fn=loss_fn,
-                            valloader=val_dataloader,
+                            val_dataloader=val_dataloader,
                             device=device)
         
         val_loss = avg_loss(val_data["losses"])
