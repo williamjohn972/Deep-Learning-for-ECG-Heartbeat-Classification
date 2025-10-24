@@ -100,7 +100,6 @@ def linear_alignment_of_r_peak(sample,
     return X_aligned_array
             
 
-    
 # PIPELINE
 def preprocessing(X):
 
