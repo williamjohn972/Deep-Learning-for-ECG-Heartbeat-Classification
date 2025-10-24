@@ -2,9 +2,9 @@ from tqdm.auto import tqdm
 
 import torch
 from torch import nn
-from torch.util.data import DataLoader
+from torch.utils.data import DataLoader
 
-from helper_classes import EarlyStopping
+from utils.torch_classes import EarlyStopping
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -112,10 +112,9 @@ def test_loop(model: nn.Module,
     }
         
 # MAIN
-def train_model(model: nn.Module,
+def train_and_eval_model(model: nn.Module,
                 loss_fn,
                 optimizer: torch.optim.Optimizer,
-                early_stopper: EarlyStopping,
                 
                 train_dataloader: DataLoader, 
                 val_dataloader: DataLoader,
@@ -128,6 +127,7 @@ def train_model(model: nn.Module,
                 val_acc_metric,
                 val_f1_metric,
                 
+                early_stopper: EarlyStopping = None,
                 debug=True):
 
     history = {
@@ -168,12 +168,13 @@ def train_model(model: nn.Module,
         val_true = torch.cat(val_data["y_true"])
         
         # Early Stopper 
-        early_stopper(
-            val_loss=val_loss, 
-            model=model,
-            optimizer = optimizer,
-            epoch=epoch+1
-            )
+        if early_stopper is not None:
+            early_stopper(
+                val_loss=val_loss, 
+                model=model,
+                optimizer = optimizer,
+                epoch=epoch+1
+                )
 
 
         # calculating metrics 
@@ -205,7 +206,7 @@ def train_model(model: nn.Module,
         print("-------------------------------------------------")
 
         # Early Stopping
-        if early_stopper.early_stop:
+        if early_stopper is not None and early_stopper.early_stop:
             print(f"Stopping Early ! Val Loss has not improved for {early_stopper.patience} epochs")
             print("-------------------------------------------------")
             break
