@@ -55,14 +55,14 @@ def clip_data(X,min_clip, max_clip):
 
 def calculate_class_weights(y):
 
-    class_counts = np.bincount(y)
+    labels, class_counts = np.unique(y, return_counts=True)
 
     """
     Calculates the class weights using inverse frequency 
     Therefore rarer classes would have the higher weight
     """
 
-    return 1.0 / class_counts
+    return labels.tolist(), (1.0 / class_counts).tolist()
 
 def calculate_sample_weights(y, class_weights):
     return class_weights[y]

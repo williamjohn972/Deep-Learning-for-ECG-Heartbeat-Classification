@@ -1,6 +1,6 @@
 import torch 
 from torch import nn
-from torch.util.data import Dataset
+from torch.utils.data import Dataset
 
 import pandas as pd
 import numpy as np

@@ -31,7 +31,7 @@ def get_r_peak_location(sample, sampling_rate, method="pantompkins"):
     _, rpeaks_info = nk.ecg_peaks(sample, sampling_rate=sampling_rate, method=method)
 
     # Extract R peak index (We simply extract the first R peak encountered)
-    if rpeaks_info.get("ECG_R_Peaks") is not None and len(rpeaks_info['ECG_R_Peaks'] > 0):
+    if rpeaks_info.get("ECG_R_Peaks") is not None and len(rpeaks_info['ECG_R_Peaks']) > 0:
         peak_index = rpeaks_info["ECG_R_Peaks"][0]
 
     else:
@@ -63,9 +63,7 @@ def linear_alignment_of_r_peak(sample,
                      method="pantompkins"):
     
     """
-    X is a single sample
-
-    Aligns all ECG segments in the X by detecting the R-peak and shifting them
+    Aligns all ECG segments in the sample by detecting the R-peak and shifting them
     linearly to the target index. Gaps are filled with zeros
     """
 
@@ -99,34 +97,83 @@ def linear_alignment_of_r_peak(sample,
 
     return X_aligned_array
             
+# NORMALIZING 
+def z_score_normalization(X):
+    """
+    Each sample is normalised on its own
+    sample is a row and each column is the time
+    """
+    sample_means = np.mean(X, axis=1, keepdims=True)
+    sample_stds = np.std(X, axis=1, keepdims=True)
+
+    # we add 1e-8 to the std to prevent a zero division
+    X_normalized = (X - sample_means) / (sample_stds + 1e-8)
+
+    return X_normalized
+
 
 # PIPELINE
-def preprocessing(X):
+class Preprocessing():
 
-    X_preprocessed = np.copy(X)
-
-    # First we perform Low-Pass Filter
-    print("Applying Low-Pass Filter ...")
-    for i in tqdm(range(X_preprocessed.shape[0]), desc="Applying Low Pass Filter", leave=False):
-
-        X_sample = X_preprocessed[i]
-
-        X_preprocessed[i] = apply_low_pass_filter(sample=X_sample,
-                            sampling_frequency=125,
-                            cutoff_frequency=25)
-    
-    # Then we apply R-Peak Re alignment
-    print("Perforing R-Peak Realignment ... ")
-    for i in tqdm(range(X_preprocessed.shape[0]), leave=False):
-
-        X_sample = X_preprocessed[i]
-
-        X_preprocessed[i] = linear_alignment_of_r_peak(sample=X_sample,
-                                        sampling_rate=125,
-                                        target_index=94,
-                                      method="pantompkins")
+    def __init__(self, 
+                 sample_freq, cutoff_freq, 
+                 target_r_peak_index,method):
         
-    return X_preprocessed
+        """
+        ---------- Step 1: Low-Pass Filter ---------
+        params:
+        sample_freq
+        cutoff_freq
+
+        -----------Step 2: R-Peak Alignment --------
+        params:
+        target_r_peak_index
+        method
+
+        -----------Step 3: Z-score Normalization ---
+        each in
+        """
+        
+        self.sample_freq = sample_freq
+        self.cutoff_freq = cutoff_freq
+
+        self.target_r_peak_index = target_r_peak_index
+        self.method = method
+
+    def fit_transform(X):
+        pass
+
+
+    def transform(self,X):
+
+        X_preprocessed = np.copy(X)
+
+        # First we perform Low-Pass Filter
+        print("Applying Low-Pass Filter ...")
+        for i in tqdm(range(X_preprocessed.shape[0]), desc="Applying Low Pass Filter", leave=False):
+
+            X_sample = X_preprocessed[i]
+
+            X_preprocessed[i] = apply_low_pass_filter(sample=X_sample,
+                                sampling_frequency=self.sample_freq,
+                                cutoff_frequency=self.cutoff_freq)
+        
+        # Then we apply R-Peak Re alignment
+        print("Perforing R-Peak Realignment ... ")
+        for i in tqdm(range(X_preprocessed.shape[0]), leave=False):
+
+            X_sample = X_preprocessed[i]
+
+            X_preprocessed[i] = linear_alignment_of_r_peak(sample=X_sample,
+                                            sampling_rate=self.sample_freq,
+                                            target_index=self.target_r_peak_index,
+                                        method=self.method)
+            
+        print("Performing Z-Score Normalization for Each Sample ...")
+        X_preprocessed_final = z_score_normalization(X_preprocessed)
+        
+        print("Completed Preprocessing")
+        return X_preprocessed_final
 
 
 

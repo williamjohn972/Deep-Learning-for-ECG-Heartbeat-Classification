@@ -65,14 +65,11 @@ class ECG_BiLSTM_Classifier(nn.Module):
         # current x: [batch, seq_len] --> we need to add an extra dim for num_features per timestamp
         # since batch_first = True, x: [batch, seq_len, num_features per timestep]
         x = x.unsqueeze(-1)
-
+      
         out, (h_n, c_n) = self.lstm(x)
         out = out[:,-1,:] # extracting the output at the last time_step
         out = self.dropout(out)
         out = self.fc(out)
         return out 
     
-
-
-
 
