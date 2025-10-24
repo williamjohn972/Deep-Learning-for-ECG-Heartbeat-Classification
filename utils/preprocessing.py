@@ -1,7 +1,31 @@
 from tqdm.auto import tqdm
 import neurokit2 as nk
 import numpy as np
+from scipy import signal
 
+
+# DENOISING
+def apply_low_pass_filter(sample, sampling_frequency, cutoff_frequency):
+    """
+    Applies a zero-phase low pass Butterworth filter to every sample in X
+    returns the filtered ECG sample 
+
+    -------- Parameters ------
+    cutoff_frequency: The frequency above which signals are attenuated
+    """
+
+    nyquist_freq = 0.5 * sampling_frequency
+    normalized_cutoff = cutoff_frequency / nyquist_freq
+
+    order = 3
+    b, a = signal.butter(order, normalized_cutoff, btype="low", analog=False)
+
+    # Apply filter to each sample
+    sample_filtered = signal.filtfilt(b,a, sample)
+
+    return sample_filtered
+
+# R-PEAK
 def get_r_peak_location(sample, sampling_rate, method="pantompkins"):
     # detect R-peaks using neurokit2
     _, rpeaks_info = nk.ecg_peaks(sample, sampling_rate=sampling_rate, method=method)
@@ -33,54 +57,77 @@ def get_r_peak_locations(X, sampling_rate, method="pantompkins"):
 
     return r_peak_indices
 
-def linear_alignment_of_r_peaks(X:np.ndarray, 
+def linear_alignment_of_r_peak(sample, 
                      sampling_rate, 
                      target_index, 
                      method="pantompkins"):
     
     """
-    Aligns all ECG segments in X by detecting the R-peak and shifting them
+    X is a single sample
+
+    Aligns all ECG segments in the X by detecting the R-peak and shifting them
     linearly to the target index. Gaps are filled with zeros
     """
 
-    SIGNAL_LENGTH = X.shape[1]
+    SIGNAL_LENGTH = len(sample)
 
-    X_aligned_array = np.zeros_like(X)
+    X_aligned_array = np.zeros_like(sample)
 
-    for i in tqdm(range(X.shape[0]), leave=False, desc="Performing Linear Alignment"):
+    # now we get the r-peak of this segment
+    current_peak_index = get_r_peak_location(sample=sample, 
+                                                sampling_rate=sampling_rate,
+                                                method=method)
+    
+    # calculate the shift
+    shift = target_index - current_peak_index
 
-        # we select the whole row 
-        sample = X[i,:] 
+    # apply linear shift
+    if shift > 0: 
+        # shift right, prepend zeros, discard data from end
+        sample_shifted = np.concatenate([np.zeros(shift), sample[:SIGNAL_LENGTH - shift]])
 
-        # now we get the r-peak of this segment
-        current_peak_index = get_r_peak_location(sample=sample, 
-                                                 sampling_rate=sampling_rate,
-                                                 method=method)
-        
-        # calculate the shift
-        shift = target_index - current_peak_index
+    elif shift < 0:
+        abs_shift = abs(shift)
+        # shift left, append zeros, discard data from start
+        sample_shifted = np.concatenate([sample[abs_shift:], np.zeros(abs_shift)])
 
-        # apply linear shift
-        if shift > 0: 
-            # shift right, prepend zeros, discard data from end
-            sample_shifted = np.concatenate([np.zeros(shift), sample[:SIGNAL_LENGTH - shift]])
+    else:
+        sample_shifted = sample
 
-        elif shift < 0:
-            abs_shift = abs(shift)
-            # shift left, append zeros, discard data from start
-            sample_shifted = np.concatenate([sample[abs_shift:], np.zeros(abs_shift)])
-
-        else:
-            sample_shifted = sample
-
-        # Store the aligned sample
-        X_aligned_array[i, :] = sample_shifted[:SIGNAL_LENGTH]
+    # Store the aligned sample
+    X_aligned_array = sample_shifted[:SIGNAL_LENGTH]
 
     return X_aligned_array
             
 
     
+# PIPELINE
+def preprocessing(X):
 
+    X_preprocessed = np.copy(X)
+
+    # First we perform Low-Pass Filter
+    print("Applying Low-Pass Filter ...")
+    for i in tqdm(range(X_preprocessed.shape[0]), desc="Applying Low Pass Filter", leave=False):
+
+        X_sample = X_preprocessed[i]
+
+        X_preprocessed[i] = apply_low_pass_filter(sample=X_sample,
+                            sampling_frequency=125,
+                            cutoff_frequency=25)
+    
+    # Then we apply R-Peak Re alignment
+    print("Perforing R-Peak Realignment ... ")
+    for i in tqdm(range(X_preprocessed.shape[0]), leave=False):
+
+        X_sample = X_preprocessed[i]
+
+        X_preprocessed[i] = linear_alignment_of_r_peak(sample=X_sample,
+                                        sampling_rate=125,
+                                        target_index=94,
+                                      method="pantompkins")
+        
+    return X_preprocessed
 
 
 
