@@ -112,38 +112,29 @@ def test_loop(model: nn.Module,
     }
         
 # MAIN
-def train_and_eval_model(model: nn.Module,
-                loss_fn,
-                optimizer: torch.optim.Optimizer,
-                
-                train_dataloader: DataLoader, 
-                val_dataloader: DataLoader,
-                
-                epochs: int,
-                device: str,
-                
-                train_acc_metric,
-                train_f1_metric,
-                val_acc_metric,
-                val_f1_metric,
-                
-                early_stopper: EarlyStopping = None,
-                debug=True):
+def train_and_eval_model(
+        model: nn.Module,
+        loss_fn,
+        optimizer: torch.optim.Optimizer,
+        
+        train_dataloader: DataLoader, 
+        val_dataloader: DataLoader,
+        
+        epochs: int,
+        device: str,
+        
+        early_stopper: EarlyStopping = None,
+        debug=True):
 
     history = {
-        "train_loss": [],
-        "val_loss": [],
-
-        "train_acc": [],
-        "val_acc": [],
-
-        "train_f1": [],
-        "val_f1": []
+        "train_loss": [], "val_loss": [],
+        "train_pred": [], "val_pred": [],
+        "train_true": [], "val_true": []
     }
 
     for epoch in range(epochs):
 
-        # train data per epoch
+        # -------------- Training Data Per Epoch -----------
         train_data = train_loop(model=model,
                 loss_fn=loss_fn,
                 trainloader=train_dataloader,
@@ -157,7 +148,7 @@ def train_and_eval_model(model: nn.Module,
         if debug:
             print(f"Classes Predicted: {train_pred.unique()}")
 
-        
+         # -------------- Validating Data Per Epoch -----------        
         val_data = val_loop(model=model,
                             loss_fn=loss_fn,
                             valloader=val_dataloader,
@@ -176,33 +167,22 @@ def train_and_eval_model(model: nn.Module,
                 epoch=epoch+1
                 )
 
-
-        # calculating metrics 
-        train_acc = train_acc_metric(train_pred, train_true).item()
-        train_f1 = train_f1_metric(train_pred, train_true).item()
-
-        val_acc = val_acc_metric(val_pred, val_true).item()
-        val_f1 = val_f1_metric(val_pred, val_true).item()
-
         # store metrics in history
         history["train_loss"].append(train_loss)
         history["val_loss"].append(val_loss)
-        history["train_acc"].append(train_acc)
-        history["train_f1"].append(train_f1)
-        history["val_acc"].append(val_acc)
-        history["val_f1"].append(val_f1)
-
-        # reset metrics
-        train_acc_metric.reset()
-        train_f1_metric.reset()
-        val_acc_metric.reset()
-        val_f1_metric.reset()
+        history["train_pred"].append(train_pred.cpu())
+        history["train_true"].append(train_true.cpu())
+        history["val_pred"].append(val_pred.cpu())
+        history["val_true"].append(val_true.cpu())
 
         # Printing Logs
         print(f"Epoch {epoch + 1} / {epochs}")
         print(f"Train Loss: {train_loss: .3f} | Train Acc: {train_acc*100: .3f}%")
         print(f"Val Loss: {val_loss: .3f} | Val Acc: {val_acc*100: .3f}%")
-        print(f"Best Val Loss: {early_stopper.val_loss_min: .3f}")
+
+        if early_stopper is not None:
+            print(f"Best Val Loss: {early_stopper.val_loss_min: .3f}")
+
         print("-------------------------------------------------")
 
         # Early Stopping
