@@ -177,8 +177,8 @@ def train_and_eval_model(
 
         # Printing Logs
         print(f"Epoch {epoch + 1} / {epochs}")
-        print(f"Train Loss: {train_loss: .3f} | Train Acc: {train_acc*100: .3f}%")
-        print(f"Val Loss: {val_loss: .3f} | Val Acc: {val_acc*100: .3f}%")
+        print(f"Train Loss: {train_loss: .3f}")
+        print(f"Val Loss: {val_loss: .3f}")
 
         if early_stopper is not None:
             print(f"Best Val Loss: {early_stopper.val_loss_min: .3f}")
