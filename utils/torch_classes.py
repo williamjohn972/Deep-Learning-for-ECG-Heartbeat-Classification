@@ -5,6 +5,8 @@ from torch.utils.data import Dataset
 import pandas as pd
 import numpy as np
 
+import os
+
 class ECG_Dataset(Dataset):
     
     def __init__(self, data: pd.DataFrame):
@@ -35,11 +37,11 @@ class EarlyStopping():
     def __init__(self, 
                 patience=10, 
                 delta=0,
-                path='best_model.pt'):
+                checkpoint_path='best_model.pt'):
     
         self.patience = patience
         self.delta = delta
-        self.path = path
+        self.checkpoint_path = checkpoint_path
         
         self.counter = 0
         self.best_score = None
@@ -64,10 +66,10 @@ class EarlyStopping():
 
         elif score < self.best_score + self.delta:
             self.counter += 1
-
-        print(f"Early Stopping Counter: {self.counter} / {self.patience}")
-        if self.counter >= self.patience:
-            self.early_stop = True
+            
+            print(f"Early Stopping Counter: {self.counter} / {self.patience}")
+            if self.counter >= self.patience:
+                self.early_stop = True
 
         else:
             self.counter = 0
@@ -83,6 +85,9 @@ class EarlyStopping():
                         model: nn.Module,
                         optimizer: torch.optim.Optimizer,
                         epoch: int):
+        
+        os.makedirs(os.path.dirname(self.checkpoint_path), exist_ok=True)
+
         print(f"Validation loss decreased ({self.val_loss_min: .4f} --> {val_loss: .4f})")
 
         checkpoint = {
@@ -95,5 +100,5 @@ class EarlyStopping():
             'delta': self.delta
         }
 
-        torch.save(checkpoint, self.path)
+        torch.save(checkpoint, self.checkpoint_path)
         self.val_loss_min = val_loss
