@@ -37,11 +37,13 @@ class EarlyStopping():
     def __init__(self, 
                 patience=10, 
                 delta=0,
-                checkpoint_path='best_model.pt'):
+                checkpoint_path='best_model.pt',
+                verbose=False):
     
         self.patience = patience
         self.delta = delta
         self.checkpoint_path = checkpoint_path
+        self.verbose = verbose
         
         self.counter = 0
         self.best_score = None
@@ -67,7 +69,8 @@ class EarlyStopping():
         elif score < self.best_score + self.delta:
             self.counter += 1
             
-            print(f"Early Stopping Counter: {self.counter} / {self.patience}")
+            if self.verbose:
+                print(f"Early Stopping Counter: {self.counter} / {self.patience}")
             if self.counter >= self.patience:
                 self.early_stop = True
 
@@ -88,7 +91,8 @@ class EarlyStopping():
         
         os.makedirs(os.path.dirname(self.checkpoint_path), exist_ok=True)
 
-        print(f"Validation loss decreased ({self.val_loss_min: .4f} --> {val_loss: .4f})")
+        if self.verbose:
+            print(f"Validation loss decreased ({self.val_loss_min: .4f} --> {val_loss: .4f})")
 
         checkpoint = {
             'epoch': epoch,
