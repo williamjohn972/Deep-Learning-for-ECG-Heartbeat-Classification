@@ -186,11 +186,13 @@ def train_and_eval_model(
 
             print("-------------------------------------------------")
 
-            # Early Stopping
-            if early_stopper is not None and early_stopper.early_stop:
+        # Early Stopping
+        if early_stopper is not None and early_stopper.early_stop:
+            if verbose:
                 print(f"Stopping Early at epoch {epoch} ! Val Loss has not improved for {early_stopper.patience} epochs")
                 print("-------------------------------------------------")
-                break
+            
+            break
 
     return history
 
