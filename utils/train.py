@@ -124,7 +124,8 @@ def train_and_eval_model(
         device: str,
         
         early_stopper: EarlyStopping = None,
-        debug=True):
+        debug=True,
+        verbose=True):
 
     history = {
         "train_loss": [], "val_loss": [],
@@ -175,21 +176,21 @@ def train_and_eval_model(
         history["val_pred"].append(val_pred.cpu())
         history["val_true"].append(val_true.cpu())
 
-        # Printing Logs
-        print(f"Epoch {epoch + 1} / {epochs}")
-        print(f"Train Loss: {train_loss: .3f}")
-        print(f"Val Loss: {val_loss: .3f}")
+        if verbose:
+            # Print Logs
+            print(f"Epoch {epoch + 1} / {epochs}")
+            print(f"Train Loss: {train_loss: .3f} | Val Loss: {val_loss: .3f}")
 
-        if early_stopper is not None:
-            print(f"Best Val Loss: {early_stopper.val_loss_min: .3f}")
+            if early_stopper is not None:
+                print(f"Best Val Loss: {early_stopper.val_loss_min: .3f}")
 
-        print("-------------------------------------------------")
-
-        # Early Stopping
-        if early_stopper is not None and early_stopper.early_stop:
-            print(f"Stopping Early ! Val Loss has not improved for {early_stopper.patience} epochs")
             print("-------------------------------------------------")
-            break
+
+            # Early Stopping
+            if early_stopper is not None and early_stopper.early_stop:
+                print(f"Stopping Early at epoch {epoch} ! Val Loss has not improved for {early_stopper.patience} epochs")
+                print("-------------------------------------------------")
+                break
 
     return history
 

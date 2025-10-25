@@ -55,7 +55,7 @@ class ECG_BiLSTM_Classifier(nn.Module):
             num_layers=num_layers,
             batch_first=True,
             bidirectional=True,
-            dropout=dropout
+            dropout= 0 if num_layers==1 else dropout,
         )
 
         self.dropout = nn.Dropout(dropout)
