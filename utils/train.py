@@ -40,7 +40,7 @@ def train_loop(model: nn.Module,
 
         train_losses.append(loss.item())
 
-        y_pred_train.append(y_pred.argmax(dim=1))
+        y_pred_train.append(y_pred)
         y_true_train.append(y)
 
         # if (batch_index + 1) % 100 == 0:  # every 100 batches
@@ -72,7 +72,7 @@ def val_loop(model: nn.Module,
 
             val_losses.append(loss.item())
 
-            y_pred_val.append(y_pred.argmax(dim=1))
+            y_pred_val.append(y_pred)
             y_true_val.append(y)
 
     
@@ -98,7 +98,7 @@ def test_loop(model: nn.Module,
 
             y_pred = model(x)
 
-            y_pred_test.append(y_pred.argmax(dim=1))
+            y_pred_test.append(y_pred)
             y_true_test.append(y)
 
 
