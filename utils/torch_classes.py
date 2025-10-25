@@ -9,22 +9,24 @@ import os
 
 class ECG_Dataset(Dataset):
     
-    def __init__(self, data: pd.DataFrame):
+    def __init__(self, X: np.array, y):
         
-        self.data = data
+        self.X = X
+        self.y = y
+
+        self.length = len(self.X)
 
     def __len__(self):
-        return len(self.data)
+        return self.length
     
     def __getitem__(self, index):
-        target_row = self.data.iloc[index]
 
         # for future reference
         # CNN --> (batch, channels, length)
         # RNN --> (batch, seq_len, features per sequence)
 
-        X = torch.tensor(target_row.iloc[:-1].values).type(torch.float)
-        y = torch.tensor(target_row.iloc[-1]).type(torch.long)
+        X = torch.tensor(self.X[index]).type(torch.float)
+        y = torch.tensor(self.y[index]).type(torch.long)
 
         return {
             "x": X,
