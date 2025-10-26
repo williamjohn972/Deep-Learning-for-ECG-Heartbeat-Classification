@@ -41,9 +41,9 @@ def train_loop(model: nn.Module,
 
         train_losses.append(loss.item())
 
-        y_pred_train.append(y_pred_logits.argmax(dim=1))
-        y_true_train.append(y)
-        y_pred_logits_train.append(y_pred_logits)
+        y_pred_train.append(y_pred_logits.argmax(dim=1).detach())
+        y_true_train.append(y.detach())
+        y_pred_logits_train.append(y_pred_logits.detach())
 
         # if (batch_index + 1) % 100 == 0:  # every 100 batches
         #     print(f"Batch [{batch_index + 1}/{len(trainloader)}], Loss: {loss.item():.4f}")
@@ -76,9 +76,9 @@ def val_loop(model: nn.Module,
 
             val_losses.append(loss.item())
 
-            y_pred_val.append(y_pred_logits.argmax(dim=1))
-            y_true_val.append(y)
-            y_pred_logits_val.append(y_pred_logits)
+            y_pred_val.append(y_pred_logits.argmax(dim=1).detach())
+            y_true_val.append(y.detach())
+            y_pred_logits_val.append(y_pred_logits.detach())
 
     
     return {
@@ -105,9 +105,9 @@ def test_loop(model: nn.Module,
 
             y_pred_logits = model(x)
 
-            y_pred_test.append(y_pred_logits.argmax(dim=1))
-            y_true_test.append(y)
-            y_pred_logits_test.append(y_pred_logits)
+            y_pred_test.append(y_pred_logits.argmax(dim=1).detach())
+            y_true_test.append(y.detach())
+            y_pred_logits_test.append(y_pred_logits.detach())
 
 
         final_y_pred_test = torch.cat(y_pred_test).cpu().numpy()
