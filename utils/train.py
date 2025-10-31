@@ -16,7 +16,9 @@ def train_loop(model: nn.Module,
                 train_dataloader: DataLoader,
                 loss_fn,
                 optimizer: torch.optim.Optimizer,
-                device
+                device,
+                grad_clip:bool = False,
+                max_norm:float = 1.0
                 ):
     
     model.train()
@@ -37,6 +39,9 @@ def train_loop(model: nn.Module,
         loss = loss_fn(y_pred_logits, y)
 
         loss.backward()
+        if grad_clip: 
+            nn.utils.clip_grad_norm_(parameters=model.parameters(), max_norm=max_norm)
+            
         optimizer.step()
 
         train_losses.append(loss.item())
