@@ -139,7 +139,10 @@ def train_and_eval_model(
         
         early_stopper: EarlyStopping = None,
         debug=True,
-        verbose=True):
+        verbose=True,
+        
+        grad_clip:bool = False,
+        max_norm = 1.0):
 
     history = {
         "train_loss": [], "val_loss": [],
@@ -155,7 +158,8 @@ def train_and_eval_model(
                 loss_fn=loss_fn,
                 train_dataloader=train_dataloader,
                 optimizer=optimizer,
-                device=device)
+                device=device,
+                grad_clip=grad_clip,max_norm=max_norm)
         
         train_loss = avg_loss(train_data["losses"])
         train_pred = torch.cat(train_data["y_pred"])
