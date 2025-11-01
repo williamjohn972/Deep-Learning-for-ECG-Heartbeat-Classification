@@ -142,7 +142,9 @@ def train_and_eval_model(
         verbose=True,
         
         grad_clip:bool = False,
-        max_norm = 1.0):
+        max_norm = 1.0,
+        
+        scheduler:torch.optim.lr_scheduler.ReduceLROnPlateau=None):
 
     history = {
         "train_loss": [], "val_loss": [],
@@ -190,6 +192,10 @@ def train_and_eval_model(
                 epoch=epoch+1
                 )
 
+        # Scheduler
+        if scheduler is not None:
+          scheduler.step(val_loss)
+
         # store metrics in history
         history["train_loss"].append(train_loss)
         history["val_loss"].append(val_loss)
@@ -205,7 +211,8 @@ def train_and_eval_model(
 
         if verbose:
             # Print Logs
-            print(f"Epoch {epoch + 1} / {epochs}")
+            current_lr = optimizer.param_groups[0]["lr"]
+            print(f"Epoch {epoch + 1} / {epochs} | Current LR: {current_lr}")
             print(f"Train Loss: {train_loss: .3f} | Val Loss: {val_loss: .3f}")
 
             if early_stopper is not None:
@@ -222,6 +229,7 @@ def train_and_eval_model(
             break
 
     return history
+
 
 
 # PLOTTING
