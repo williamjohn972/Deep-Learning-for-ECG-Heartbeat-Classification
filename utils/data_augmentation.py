@@ -7,7 +7,7 @@ from typing import Optional
 import numpy as np
 
 
-MITBIH_SAMPLING_RATE = 360
+MITBIH_SAMPLING_RATE = 125
 """Nominal sampling rate (Hz) used for the MIT-BIH heartbeat segments."""
 
 MITBIH_SAMPLE_LENGTH = 187
